@@ -1,0 +1,50 @@
+services:
+  go:
+    container_name: app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    tty: true
+    ports:
+      - 5100:5100
+    volumes:
+      - ./api:/app/api
+    environment:
+      - GO111MODULE=on
+    env_file:
+      - .env
+    depends_on:
+      - db
+  db:
+    image: postgres:15
+    container_name: postgres
+    ports:
+      - ${DB_PORT}:5432
+    volumes:
+      - db-store:/app/api/db-data
+      - ./api/db-data:/app/api/db-data/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_DB=${DB_DATABASE}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    env_file:
+      - .env
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    ports:
+      - 8080:80
+    volumes:
+      - volume_pgadmin:/app/api/pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: example@domain.com
+      PGADMIN_DEFAULT_PASSWORD: password
+    depends_on:
+      - db
+    env_file:
+      - .env
+volumes:
+  db-store:
+  volume_pgadmin:
+
+
