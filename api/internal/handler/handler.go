@@ -91,49 +91,6 @@ func PostParts(c *gin.Context) {
 	c.JSON(http.StatusOK, body)
 }
 
-func GetPartDetailsWithRelations(c *gin.Context) {
-	partId := c.Param("id")
-	var part models.Parts
-	var orders []models.Orders
-	var partLocations []models.PartLocations
-	var locations []models.Locations
-	var stockFrames []models.StockFrames
-
-	// PartsテーブルからIdに該当するレコードを取得
-	if err := db.Preload("PartLocations").Preload("Orders").First(&part, "id = ?", partId).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Part not found"})
-		return
-	}
-
-	// OrdersテーブルからPartIdに一致する全レコードを取得
-	db.Where("part_id = ?", partId).Find(&orders)
-
-	// PartLocationsテーブルからPartIdに一致する全レコードを取得
-	db.Where("part_id = ?", partId).Find(&partLocations)
-
-	// LocationsテーブルからPartLocationsのLocationIdに一致する全レコードを取得
-	locationIds := make([]string, 0)
-	for _, pl := range partLocations {
-		locationIds = append(locationIds, pl.LocationId)
-	}
-	db.Where("id IN ?", locationIds).Find(&locations)
-
-	// StockFrameテーブルからLocationsのStockFrameNameに一致する全レコードを取得
-	stockFrameNames := make([]string, 0)
-	for _, loc := range locations {
-		stockFrameNames = append(stockFrameNames, loc.StockFrameName)
-	}
-	db.Where("name IN ?", stockFrameNames).Find(&stockFrames)
-
-	c.JSON(http.StatusOK, gin.H{
-		"Part":          part,
-		"Orders":        orders,
-		"PartLocations": partLocations,
-		"Locations":     locations,
-		"StockFrames":   stockFrames,
-	})
-}
-
 func DeletePart(c *gin.Context) {
 	partId := c.Param("id")
 
@@ -305,4 +262,48 @@ func PatchPartLocation(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Part location updated successfully"})
+}
+
+func GetPartDetails(c *gin.Context) {
+	partId := c.Param("id") // URLからPartのIDを取得
+	var part models.Parts
+	var partLocations []models.PartLocations
+	var orders []models.Orders
+	var locations []models.Locations
+
+	// PartsテーブルからIdに該当するレコードを取得
+	if err := db.First(&part, "id = ?", partId).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Part not found"})
+		return
+	}
+
+	// PartLocationsテーブルからPartIdに一致する全レコードを取得
+	if err := db.Where("part_id = ?", partId).Find(&partLocations).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve part locations"})
+		return
+	}
+
+	// OrdersテーブルからPartIdに一致する全レコードを取得
+	if err := db.Where("part_id = ?", partId).Find(&orders).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve orders"})
+		return
+	}
+
+	// PartLocationsから取得したLocationIdを使用してLocationsテーブルからレコードを取得
+	locationIds := make([]string, len(partLocations))
+	for i, pl := range partLocations {
+		locationIds[i] = pl.LocationId
+	}
+	if err := db.Where("id IN ?", locationIds).Find(&locations).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve locations"})
+		return
+	}
+
+	// 成功した場合、Part、PartLocations、Orders、およびLocationsのデータをJSON形式で返す
+	c.JSON(http.StatusOK, gin.H{
+		"Part":          part,
+		"PartLocations": partLocations,
+		"Orders":        orders,
+		"Locations":     locations,
+	})
 }

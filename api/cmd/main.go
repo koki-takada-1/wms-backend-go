@@ -17,7 +17,7 @@ func main() {
 	v1.GET("/parts", handler.GetParts)
 	v1.POST("/parts", handler.PostParts)
 	// idに基づく部品情報詳細
-	v1.GET("/parts/:id", handler.GetPartDetailsWithRelations)
+	v1.GET("/parts/:id", handler.GetPartDetails)
 	v1.DELETE("/parts/:id", handler.DeletePart)
 
 	v1.GET("/orders", handler.GetOrders)
@@ -34,8 +34,6 @@ func main() {
 
 	v1.POST("/partlocations", handler.PostPartLocation)
 	v1.PATCH("/partlocations/part/:partId/location/:locationId", handler.PatchPartLocation)
-
-	v1.GET("/partdetails/:id", handler.GetPartDetailsWithRelations)
 
 	r.Run(":5100")
 }
