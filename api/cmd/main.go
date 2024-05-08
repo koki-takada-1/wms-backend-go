@@ -35,5 +35,7 @@ func main() {
 	v1.POST("/partlocations", handler.PostPartLocation)
 	v1.PATCH("/partlocations/part/:partId/location/:locationId", handler.PatchPartLocation)
 
+	v1.GET("/partdetails/:id", handler.GetPartDetailsWithRelations)
+
 	r.Run(":5100")
 }

@@ -20,7 +20,7 @@ var (
 
 func generateID() string {
 	rand.Seed(time.Now().UnixNano())
-	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	var letters = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	b := make([]rune, 7)
 	for i := range b {
 		b[i] = letters[rand.Intn(len(letters))]
@@ -84,7 +84,10 @@ func PostParts(c *gin.Context) {
 		return
 	}
 
-	db.Create(&body)
+	if result := db.Create(&body); result.Error != nil {
+		c.JSON(http.StatusBadRequest, result.Error.Error())
+		return
+	}
 	c.JSON(http.StatusOK, body)
 }
 
@@ -134,7 +137,7 @@ func GetPartDetailsWithRelations(c *gin.Context) {
 func DeletePart(c *gin.Context) {
 	partId := c.Param("id")
 
-	if err := db.Where("id = ?", partId).Delete(&models.Parts{}).Error; err != nil {
+	if err := db.Where("Id = ?", partId).Delete(&models.Parts{}).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete part"})
 		return
 	}
@@ -209,8 +212,7 @@ func PostStockFrame(c *gin.Context) {
 		return
 	}
 
-	result := db.Create(&body)
-	if result.Error != nil {
+	if result := db.Create(&body); result.Error != nil {
 		c.JSON(http.StatusBadRequest, result.Error.Error())
 		return
 	}
@@ -267,7 +269,11 @@ func PostPartLocation(c *gin.Context) {
 		return
 	}
 
-	db.Create(&body)
+	if result := db.Create(&body); result.Error != nil {
+		c.JSON(http.StatusBadRequest, result.Error.Error())
+		return
+	}
+
 	c.JSON(http.StatusOK, body)
 }
 
