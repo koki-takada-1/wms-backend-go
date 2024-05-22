@@ -1,5 +1,12 @@
 package models
 
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
 type Parts struct {
 	Id                string  `gorm:"primarykey;size:10"`
 	Name              string  `gorm:"size:255"`
@@ -37,4 +44,17 @@ type PartLocations struct {
 	// Locations  Locations `gorm:"foreignKey:Id;references:LocationId"`
 	Parts     Parts     `gorm:"foreignKey:PartId;references:Id"`
 	Locations Locations `gorm:"foreignKey:LocationId;references:Id"`
+}
+
+type User struct {
+	Id           string     `gorm:"primaryKey;type:uuid"`
+	Email        string     `gorm:"size:255"`
+	PassWordHash string     `gorm:"size:60"`
+	VerifiedAt   *time.Time `gorm:"type:timestamp"`
+	ConfirmToken string     `gorm:"size:32"`
+}
+
+func (user *User) BeforeCreate(tx *gorm.DB) (err error) {
+	user.Id = uuid.New().String()
+	return nil
 }

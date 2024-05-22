@@ -1,22 +1,23 @@
 package handler
 
 import (
-	"fmt"
-	"log"
 	"math/rand"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/koki-takada-1/go-rest-api/api/internal/models"
-	"gorm.io/driver/postgres"
+
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
 var (
 	db *gorm.DB
 )
+
+func SetupHandlers() {
+	db = models.GetDB() // データベース接続をグローバル変数に設定
+}
 
 func generateID() string {
 	rand.Seed(time.Now().UnixNano())
@@ -28,50 +29,14 @@ func generateID() string {
 	return string(b)
 }
 
-func Init() {
-	var err error
-	// または環境変数から取得
-	// dbUser := os.Getenv("DB_USER")
-	// dbPassword := os.Getenv("DB_PASSWORD")
-	// dbName := os.Getenv("DB_DATABASE")
-	// dbHost := os.Getenv("DB_HOST") // または環境変数から取得
-	// dbPort := os.Getenv("DB_PORT") // または環境変数から取得
-	dbUser := "postgres"
-	dbPassword := "postgres"
-	dbName := "postgres"
-	dbHost := "db"
-	dbPort := "5432"
-
-	// DSNを構築
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Tokyo", dbHost, dbUser, dbPassword, dbName, dbPort)
-	log.Println("DSNはこちら:", dsn)
-	// GORMでデータベースに接続
-	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
-	})
-	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
-	}
-
-	// データベースにテーブルを作成（マイグレーションの順序を修正）
-	err = db.AutoMigrate(
-		&models.StockFrames{},
-		&models.Parts{},
-		&models.Locations{},     // LocationsをPartsの後にマイグレート
-		&models.PartLocations{}, // PartLocationsを最後にマイグレート
-		&models.Orders{},
-	)
-	if err != nil {
-		log.Fatal("Failed to migrate database:", err)
-	}
-}
-
 // 　部品テーブルのレコード一覧get
 func GetParts(c *gin.Context) {
 	var parts []models.Parts
-	db.Find(&parts)
+	if err := db.Find(&parts).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error", "details": err.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, parts)
-	// c.JSON(200, gin.H{"post":post})
 }
 
 // 部品レコードにレコードをpost

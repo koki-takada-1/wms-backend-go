@@ -1,0 +1,35 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  # コマンド実行ディレクトリを指定
+  cmd = "go build -o ./tmp/main ./cmd"
+  # 実行ファイルのパス
+  bin = "./tmp/main"
+  # ビルドの遅延時間（ミリ秒）
+  delay = 1000
+  # ビルド対象のディレクトリ
+  include_dir = ["cmd"]
+  # ビルド対象のファイル拡張子
+  include_ext = ["go", "tpl", "tmpl", "html"]
+  # ビルドから除外するディレクトリ
+  exclude_dir = ["assets", "tmp", "vendor", "testdata"]
+  # ビルドから除外するファイルパターン
+  exclude_regex = ["_test.go"]
+  # ビルドエラー時のログファイル
+  log = "build-errors.log"
+
+[color]
+  # 各種ログの色設定
+  main = "magenta"
+  watcher = "cyan"
+  build = "yellow"
+  runner = "green"
+
+[log]
+  # ログの設定
+  time = true
+
+[misc]
+  # ビルド時に画面をクリアするかどうか
+  clean_on_exit = true
