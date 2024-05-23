@@ -1,15 +1,17 @@
-FROM golang:latest
+FROM golang:1.22.3-alpine3.19
 
-WORKDIR /app/api
+RUN apk update && apk add bash
+
+WORKDIR /app
+
 COPY ./api .
+COPY ./api/go.mod ./api/go.sum ./
+COPY ./api/.air.toml ./
 
-# OSのインストール済みのパッケージをバージョンアップし、必要なパッケージをインストール
-RUN apt-get update && \
-    apt-get install -y git gcc musl-dev && \
-    rm -rf /var/lib/apt/lists/*
+RUN go mod download && \
+    go build -o myapp ./cmd && \
+    go install github.com/go-delve/delve/cmd/dlv@latest && \
+    go install github.com/cosmtrek/air@latest
 
-
-# デバッグ用のツール
-RUN go install github.com/go-delve/delve/cmd/dlv@latest
-
-
+# airを起動
+CMD ["air", "-c", ".air.toml"]
