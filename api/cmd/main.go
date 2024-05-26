@@ -2,13 +2,11 @@ package main
 
 import (
 	"encoding/csv"
-	"log"
 	"os"
 	"strconv"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"github.com/koki-takada-1/go-rest-api/api/internal/handler"
 	"github.com/koki-takada-1/go-rest-api/api/internal/models"
 	"gorm.io/gorm"
@@ -17,9 +15,9 @@ import (
 const latest = "/v1"
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
+	// if err := godotenv.Load(); err != nil {
+	// 	log.Fatalf("Error loading .env file: %v", err)
+	// }
 	// Ginエンジンのインスタンスを作成
 	r := gin.Default()
 	// CORS for https://localhost:3005 and https://localhost:5100

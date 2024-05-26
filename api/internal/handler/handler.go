@@ -20,11 +20,12 @@ func SetupHandlers() {
 }
 
 func generateID() string {
-	rand.Seed(time.Now().UnixNano())
+	src := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(src)
 	var letters = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	b := make([]rune, 7)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+		b[i] = letters[r.Intn(len(letters))]
 	}
 	return string(b)
 }

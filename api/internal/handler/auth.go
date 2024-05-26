@@ -115,6 +115,28 @@ func sendActivationEmail(c *gin.Context, email, token string) {
 	}
 }
 
+func ActivateAccount(c *gin.Context) {
+	tokenString := c.Query("token")
+
+	// ConfirmTokenを使用してユーザーを検索
+	var user models.User
+	if err := db.Where("confirm_token = ?", tokenString).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+		return
+	}
+
+	// トークンが有効であれば、ユーザーのアカウントをアクティベート
+	now := time.Now()      // 現在時刻を取得
+	user.VerifiedAt = &now // ポインタを代入
+	user.ConfirmToken = "" // トークンをクリア
+	if err := db.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user verification"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Account activated successfully"})
+}
+
 func Login(c *gin.Context) {
 	var credentials struct {
 		Email    string `json:"email"`
@@ -143,28 +165,6 @@ func Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"token": tokenString})
-}
-
-func ActivateAccount(c *gin.Context) {
-	tokenString := c.Query("token")
-
-	// ConfirmTokenを使用してユーザーを検索
-	var user models.User
-	if err := db.Where("confirm_token = ?", tokenString).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
-		return
-	}
-
-	// トークンが有効であれば、ユーザーのアカウントをアクティベート
-	now := time.Now()      // 現在時刻を取得
-	user.VerifiedAt = &now // ポインタを代入
-	user.ConfirmToken = "" // トークンをクリア
-	if err := db.Save(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user verification"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Account activated successfully"})
 }
 
 func Authenticate(c *gin.Context) {
